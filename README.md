@@ -1,2 +1,2 @@
-### University Hiring System
-# It is an academic project! :)
+## University Hiring System
+It is an academic project! :)
