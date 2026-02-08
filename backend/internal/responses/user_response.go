@@ -5,7 +5,7 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-type UserResponse struct{
+type DefaultResponse struct{
 	Status int   `json:"status"`
 	Success bool  `json:"success"`
 	Message any `json:"message"`

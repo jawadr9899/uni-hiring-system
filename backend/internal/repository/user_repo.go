@@ -14,7 +14,7 @@ import (
 
 type Database interface {
 	CreateUser(name string, email string, password string) (string, error)
-	GetUserById(id string) (models.User, error)
+	GetUserByCol(id string) (models.User, error)
 	GetAllUsers() ([]models.User, error)
 }
 
@@ -75,10 +75,10 @@ func (sqlite *Sqlite) CreateUser(user models.User) (int64, error) {
 	return id, nil
 }
 
-func (sqlite *Sqlite) GetUserById(id string) (models.User, error) {
-	stmnt, err := sqlite.Db.Prepare("SELECT id,name,email,password FROM users WHERE id = ? LIMIT 1")
+func (sqlite *Sqlite) GetUserByCol(colName string,value string) (models.User, error) {
+	stmnt, err := sqlite.Db.Prepare(fmt.Sprintf("SELECT id,name,email,password FROM users WHERE %s = ? LIMIT 1",colName))
 	if err != nil {
-		log.Fatal("Failed to retireve record by id")
+		log.Fatalf("Failed to retireve record by %s",colName)
 		return models.User{}, err
 	}
 
@@ -86,10 +86,10 @@ func (sqlite *Sqlite) GetUserById(id string) (models.User, error) {
 
 	var user models.User
 
-	err = stmnt.QueryRow(id).Scan(&user.Id, &user.Name, &user.Email, &user.Password)
+	err = stmnt.QueryRow(value).Scan(&user.Id, &user.Name, &user.Email, &user.Password)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return models.User{}, fmt.Errorf("No user found with id %s", id)
+			return models.User{}, fmt.Errorf("No %s found in col %s",value, colName)
 		}
 		return models.User{}, fmt.Errorf("Query error %s", err)
 	}

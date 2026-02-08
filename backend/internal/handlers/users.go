@@ -16,7 +16,7 @@ func GetUsers(db *repository.Sqlite) func(c *echo.Context) error {
 	return func(c *echo.Context) error {
 		users, err := db.GetAllUsers()
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, &responses.UserResponse{
+			return c.JSON(http.StatusInternalServerError, &responses.DefaultResponse{
 				Status:  http.StatusInternalServerError,
 				Success: false,
 				Message: err,
@@ -33,10 +33,20 @@ func Signup(db *repository.Sqlite) func(c *echo.Context) error {
 		err := echo.BindBody(c, &user)
 		if err != nil {
 			c.Logger().Error("Failed to post user")
-			return c.JSON(http.StatusBadRequest, &responses.UserResponse{
+			return c.JSON(http.StatusBadRequest, &responses.DefaultResponse{
 				Status:  http.StatusBadRequest,
 				Success: false,
 				Message: err,
+			})
+		}
+		// check if user already exists in database
+		_, err = db.GetUserByCol("email",user.Email)
+		if err == nil {
+			c.Logger().Error("User already exists")
+			return c.JSON(http.StatusBadRequest,&responses.DefaultResponse{
+				Status: http.StatusBadRequest,
+				Success: false,
+				Message: "User already exists",
 			})
 		}
 
@@ -51,7 +61,7 @@ func Signup(db *repository.Sqlite) func(c *echo.Context) error {
 		code, err := db.CreateUser(user)
 		if err != nil {
 			c.Logger().Error("Database failed to put user")
-			return c.JSON(http.StatusBadRequest, &responses.UserResponse{
+			return c.JSON(http.StatusBadRequest, &responses.DefaultResponse{
 				Status:  http.StatusBadRequest,
 				Success: false,
 				Message: fmt.Sprintf("%s %d", err.Error(), code),
@@ -69,6 +79,10 @@ func Login(db *repository.Sqlite) func(c *echo.Context) error {
 			c.Logger().Error("No body found in request")
 			return err
 		}
+
+		
+		
+
 		return c.String(200, "Hello World")
 
 	}
