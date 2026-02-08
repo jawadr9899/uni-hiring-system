@@ -6,6 +6,7 @@ import (
 	"uhs/internal/models"
 	"uhs/internal/repository"
 	"uhs/internal/responses"
+	"uhs/internal/types"
 
 	"github.com/labstack/echo/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -60,8 +61,15 @@ func Signup(db *repository.Sqlite) func(c *echo.Context) error {
 	}
 }
 
-// func Login(db *repository.Sqlite) func(c *echo.Context) error {
-// 	return func(c *echo.Context) error {
+func Login(db *repository.Sqlite) func(c *echo.Context) error {
+	return func(c *echo.Context) error {
+		var user types.UserLogin
+		err := echo.BindBody(c, user)
+		if err != nil {
+			c.Logger().Error("No body found in request")
+			return err
+		}
+		return c.String(200, "Hello World")
 
-// 	}
-// }
+	}
+}
