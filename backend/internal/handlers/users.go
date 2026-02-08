@@ -3,11 +3,12 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"uhs/internal/models"
 	"uhs/internal/repository"
 	"uhs/internal/responses"
-	"uhs/internal/models"
 
 	"github.com/labstack/echo/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func GetUsers(db *repository.Sqlite) func(c *echo.Context) error {
@@ -25,7 +26,7 @@ func GetUsers(db *repository.Sqlite) func(c *echo.Context) error {
 
 }
 
-func PostUser(db *repository.Sqlite) func(c *echo.Context) error {
+func Signup(db *repository.Sqlite) func(c *echo.Context) error {
 	return func(c *echo.Context) error {
 		var user models.User
 		err := echo.BindBody(c, &user)
@@ -37,6 +38,15 @@ func PostUser(db *repository.Sqlite) func(c *echo.Context) error {
 				Message: err,
 			})
 		}
+
+		// hash password
+		hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+		if err != nil {
+			c.Logger().Error("Failed to hash password")
+			return err
+		}
+		user.Password = string(hash)
+
 		code, err := db.CreateUser(user)
 		if err != nil {
 			c.Logger().Error("Database failed to put user")
@@ -49,3 +59,9 @@ func PostUser(db *repository.Sqlite) func(c *echo.Context) error {
 		return responses.JsonResponse(c, http.StatusOK, user)
 	}
 }
+
+// func Login(db *repository.Sqlite) func(c *echo.Context) error {
+// 	return func(c *echo.Context) error {
+
+// 	}
+// }

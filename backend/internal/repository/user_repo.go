@@ -8,7 +8,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
-	"golang.org/x/crypto/bcrypt"
 
 	_ "github.com/glebarez/go-sqlite"
 )
@@ -59,13 +58,8 @@ func (sqlite *Sqlite) CreateUser(user models.User) (int64, error) {
 	}
 
 	defer stmnt.Close()
-	// hash password
-	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return 0, err
-	}
 
-	result, err := stmnt.Exec(uuid.NewString(), user.Name, user.Email, string(hash))
+	result, err := stmnt.Exec(uuid.NewString(), user.Name, user.Email, user.Password)
 	if err != nil {
 		log.Fatal("Failed to create user!")
 		return 0, err
