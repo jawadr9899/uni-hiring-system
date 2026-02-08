@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"uhs/internal/repository"
 	"uhs/internal/responses"
-	"uhs/internal/types"
+	"uhs/internal/models"
 
 	"github.com/labstack/echo/v5"
 )
@@ -27,7 +27,7 @@ func GetUsers(db *repository.Sqlite) func(c *echo.Context) error {
 
 func PostUser(db *repository.Sqlite) func(c *echo.Context) error {
 	return func(c *echo.Context) error {
-		var user types.User
+		var user models.User
 		err := echo.BindBody(c, &user)
 		if err != nil {
 			c.Logger().Error("Failed to post user")

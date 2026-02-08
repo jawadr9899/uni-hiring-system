@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"uhs/internal/types"
+	"uhs/internal/models"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
@@ -15,8 +15,8 @@ import (
 
 type Database interface {
 	CreateUser(name string, email string, password string) (string, error)
-	GetUserById(id string) (types.User, error)
-	GetAllUsers() ([]types.User, error)
+	GetUserById(id string) (models.User, error)
+	GetAllUsers() ([]models.User, error)
 }
 
 type Sqlite struct {
@@ -50,7 +50,7 @@ func New(path string, app *echo.Echo) (*Sqlite, error) {
 	}, nil
 }
 
-func (sqlite *Sqlite) CreateUser(user types.User) (int64, error) {
+func (sqlite *Sqlite) CreateUser(user models.User) (int64, error) {
 	stmnt, err := sqlite.Db.Prepare("INSERT INTO users (id,name,email,password) VALUES (?,?,?,?)")
 
 	if err != nil {
@@ -81,30 +81,30 @@ func (sqlite *Sqlite) CreateUser(user types.User) (int64, error) {
 	return id, nil
 }
 
-func (sqlite *Sqlite) GetUserById(id string) (types.User, error) {
+func (sqlite *Sqlite) GetUserById(id string) (models.User, error) {
 	stmnt, err := sqlite.Db.Prepare("SELECT id,name,email,password FROM users WHERE id = ? LIMIT 1")
 	if err != nil {
 		log.Fatal("Failed to retireve record by id")
-		return types.User{}, err
+		return models.User{}, err
 	}
 
 	defer stmnt.Close()
 
-	var user types.User
+	var user models.User
 
 	err = stmnt.QueryRow(id).Scan(&user.Id, &user.Name, &user.Email, &user.Password)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return types.User{}, fmt.Errorf("No user found with id %s", id)
+			return models.User{}, fmt.Errorf("No user found with id %s", id)
 		}
-		return types.User{}, fmt.Errorf("Query error %s", err)
+		return models.User{}, fmt.Errorf("Query error %s", err)
 	}
 
 	return user, nil
 
 }
 
-func (sqlite *Sqlite) GetAllUsers() ([]types.User, error) {
+func (sqlite *Sqlite) GetAllUsers() ([]models.User, error) {
 	stmnt, err := sqlite.Db.Prepare("SELECT * FROM users")
 	if err != nil {
 		return nil, err
@@ -119,10 +119,10 @@ func (sqlite *Sqlite) GetAllUsers() ([]types.User, error) {
 
 	defer rows.Close()
 
-	var users []types.User
+	var users []models.User
 
 	for rows.Next() {
-		var user types.User
+		var user models.User
 		err := rows.Scan(&user.Id, &user.Name, &user.Email, &user.Password)
 		if err != nil {
 			return nil, err
