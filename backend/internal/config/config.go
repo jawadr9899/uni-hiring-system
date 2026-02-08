@@ -6,17 +6,19 @@ type Config struct {
 	Port  string
 	DBUrl string
 	SqliteDBPath string
+	JWTSecret string
 }
 
 func LoadConfig() *Config{
 	return &Config{
-		Port: getEnv("PORT","8080"),
-		DBUrl: getEnv("DATABASE_URL","sqlite:./dev.db"),
-		SqliteDBPath: getEnv("SQLITE_PATH","sqlite:./test.db"),
+		Port: GetEnv("PORT","8080"),
+		DBUrl: GetEnv("DATABASE_URL","sqlite:./dev.db"),
+		SqliteDBPath: GetEnv("SQLITE_PATH","sqlite:./test.db"),
+		JWTSecret: GetEnv("JWT_SECRET","DEFAULT_SECRET_KEY"),
 	}
 }
 
-func getEnv(key string, defaultValue string) string {
+func GetEnv(key string, defaultValue string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
 	}
