@@ -9,7 +9,7 @@ import (
 )
 
 type AuthService interface {
-	GenerateToken(userId string, userName string) (jwt.Token, error)
+	GenerateToken(userId string, userName string) (string, error)
 }
 
 type CustomJWTClaims struct {
