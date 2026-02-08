@@ -40,16 +40,15 @@ func Signup(db *repository.Sqlite) func(c *echo.Context) error {
 			})
 		}
 		// check if user already exists in database
-		_, err = db.GetUserByCol("email",user.Email)
+		_, err = db.GetUserByCol("email", user.Email)
 		if err == nil {
 			c.Logger().Error("User already exists")
-			return c.JSON(http.StatusBadRequest,&responses.DefaultResponse{
-				Status: http.StatusBadRequest,
+			return c.JSON(http.StatusBadRequest, &responses.DefaultResponse{
+				Status:  http.StatusBadRequest,
 				Success: false,
 				Message: "User already exists",
 			})
 		}
-
 		// hash password
 		hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 		if err != nil {
@@ -79,9 +78,27 @@ func Login(db *repository.Sqlite) func(c *echo.Context) error {
 			c.Logger().Error("No body found in request")
 			return err
 		}
-
-		
-		
+		// check if user exists or not in database
+		u, err := db.GetUserByCol("email", user.Email)
+		if err != nil {
+			c.Logger().Error("User doesn't exist")
+			return c.JSON(http.StatusBadRequest, &responses.DefaultResponse{
+				Status:  http.StatusBadRequest,
+				Success: false,
+				Message: "Invalid credentials",
+			})
+		}
+		// check the hash
+		err = bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(user.Password))
+		if err != nil {
+			c.Logger().Error("Invalid credentials")
+			return c.JSON(http.StatusBadRequest, &responses.DefaultResponse{
+				Status:  http.StatusBadRequest,
+				Success: false,
+				Message: "Invalid credentials",
+			})
+		}
+		// generate jwt token
 
 		return c.String(200, "Hello World")
 
