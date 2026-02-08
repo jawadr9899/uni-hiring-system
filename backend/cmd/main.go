@@ -2,10 +2,9 @@ package main
 
 import (
 	"log"
-	"os"
 	"uhs/internal/config"
-	"uhs/internal/repository"
 	"uhs/internal/routes"
+	"uhs/internal/services"
 
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v5"
@@ -21,16 +20,16 @@ func main() {
 	// Middlewares
 	app.Use(middleware.RequestLogger())
 	app.Use(middleware.Recover())
+
 	// Groups
 	api := app.Group("/api")
 	// DB Connection
-	db, err := repository.New(cfg.SqliteDBPath, app)
+	db, err := services.SetupDB(app, cfg)
 	if err != nil {
 		app.Logger.Error("Failed to connect to database")
-		os.Exit(1)
 	}
 	// Routes
-	routes.SetupRoutes(api, db)
+	routes.SetupRoutes(cfg, api, db)
 
 	if err := app.Start(":8080"); err != nil {
 		app.Logger.Error("Failed to start server with error ")

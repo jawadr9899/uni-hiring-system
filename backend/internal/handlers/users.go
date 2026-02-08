@@ -1,22 +1,21 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 	"uhs/internal/models"
-	"uhs/internal/repository"
 	"uhs/internal/responses"
 	"uhs/internal/services"
 	"uhs/internal/types"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func GetUsers(db *repository.Sqlite) func(c *echo.Context) error {
+func GetUsers(userModel types.UserOps) func(c *echo.Context) error {
 	return func(c *echo.Context) error {
-		users, err := db.GetAllUsers()
+		users, err := userModel.GetEntities()
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, &responses.DefaultResponse{
 				Status:  http.StatusInternalServerError,
@@ -29,7 +28,7 @@ func GetUsers(db *repository.Sqlite) func(c *echo.Context) error {
 
 }
 
-func Signup(db *repository.Sqlite) func(c *echo.Context) error {
+func Signup(userModel types.UserOps) func(c *echo.Context) error {
 	return func(c *echo.Context) error {
 		var user models.User
 		err := echo.BindBody(c, &user)
@@ -42,8 +41,8 @@ func Signup(db *repository.Sqlite) func(c *echo.Context) error {
 			})
 		}
 		// check if user already exists in database
-		_, err = db.GetUserByCol("email", user.Email)
-		if err == nil {
+		usersList := userModel.GetEntitiesWhere("email = ?", user.Email)
+		if len(usersList) > 0 {
 			c.Logger().Error("User already exists")
 			return c.JSON(http.StatusBadRequest, responses.DefaultResponse{
 				Status:  http.StatusBadRequest,
@@ -51,6 +50,8 @@ func Signup(db *repository.Sqlite) func(c *echo.Context) error {
 				Message: "User already exists",
 			})
 		}
+		// generate id for user
+		user.Id = uuid.NewString()
 		// hash password
 		hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 		if err != nil {
@@ -59,20 +60,20 @@ func Signup(db *repository.Sqlite) func(c *echo.Context) error {
 		}
 		user.Password = string(hash)
 
-		code, err := db.CreateUser(user)
+		err = userModel.CreateEntity(&user)
 		if err != nil {
 			c.Logger().Error("Database failed to put user")
 			return c.JSON(http.StatusBadRequest, responses.DefaultResponse{
 				Status:  http.StatusBadRequest,
 				Success: false,
-				Message: fmt.Sprintf("%s %d", err.Error(), code),
+				Message: err.Error(),
 			})
 		}
 		return responses.JsonResponse(c, http.StatusOK, user)
 	}
 }
 
-func Login(db *repository.Sqlite) func(c *echo.Context) error {
+func Login(userModel types.UserOps) func(c *echo.Context) error {
 	return func(c *echo.Context) error {
 		var user types.UserLogin
 		err := echo.BindBody(c, &user)
@@ -81,8 +82,8 @@ func Login(db *repository.Sqlite) func(c *echo.Context) error {
 			return err
 		}
 		// check if user exists or not in database
-		u, err := db.GetUserByCol("email", user.Email)
-		if err != nil {
+		usersList := userModel.GetEntitiesWhere("email = ?", user.Email)
+		if len(usersList) == 0 {
 			c.Logger().Error("User doesn't exist")
 			return c.JSON(http.StatusBadRequest, responses.DefaultResponse{
 				Status:  http.StatusBadRequest,
@@ -91,7 +92,7 @@ func Login(db *repository.Sqlite) func(c *echo.Context) error {
 			})
 		}
 		// check the hash
-		err = bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(user.Password))
+		err = bcrypt.CompareHashAndPassword([]byte(usersList[0].Password), []byte(user.Password))
 		if err != nil {
 			c.Logger().Error("Invalid credentials")
 			return c.JSON(http.StatusBadRequest, responses.DefaultResponse{
@@ -101,7 +102,7 @@ func Login(db *repository.Sqlite) func(c *echo.Context) error {
 			})
 		}
 		// generate jwt token
-		claims := services.NewCustomClaims(*u.Id, u.Email, time.Now().Add(time.Minute*15))
+		claims := services.NewCustomClaims(usersList[0].Id, usersList[0].Email, time.Now().Add(time.Minute*15))
 		token, err := claims.GenerateToken()
 
 		if err != nil {
