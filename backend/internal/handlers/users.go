@@ -3,9 +3,11 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"time"
 	"uhs/internal/models"
 	"uhs/internal/repository"
 	"uhs/internal/responses"
+	"uhs/internal/services"
 	"uhs/internal/types"
 
 	"github.com/labstack/echo/v5"
@@ -33,7 +35,7 @@ func Signup(db *repository.Sqlite) func(c *echo.Context) error {
 		err := echo.BindBody(c, &user)
 		if err != nil {
 			c.Logger().Error("Failed to post user")
-			return c.JSON(http.StatusBadRequest, &responses.DefaultResponse{
+			return c.JSON(http.StatusBadRequest, responses.DefaultResponse{
 				Status:  http.StatusBadRequest,
 				Success: false,
 				Message: err,
@@ -43,7 +45,7 @@ func Signup(db *repository.Sqlite) func(c *echo.Context) error {
 		_, err = db.GetUserByCol("email", user.Email)
 		if err == nil {
 			c.Logger().Error("User already exists")
-			return c.JSON(http.StatusBadRequest, &responses.DefaultResponse{
+			return c.JSON(http.StatusBadRequest, responses.DefaultResponse{
 				Status:  http.StatusBadRequest,
 				Success: false,
 				Message: "User already exists",
@@ -60,7 +62,7 @@ func Signup(db *repository.Sqlite) func(c *echo.Context) error {
 		code, err := db.CreateUser(user)
 		if err != nil {
 			c.Logger().Error("Database failed to put user")
-			return c.JSON(http.StatusBadRequest, &responses.DefaultResponse{
+			return c.JSON(http.StatusBadRequest, responses.DefaultResponse{
 				Status:  http.StatusBadRequest,
 				Success: false,
 				Message: fmt.Sprintf("%s %d", err.Error(), code),
@@ -82,7 +84,7 @@ func Login(db *repository.Sqlite) func(c *echo.Context) error {
 		u, err := db.GetUserByCol("email", user.Email)
 		if err != nil {
 			c.Logger().Error("User doesn't exist")
-			return c.JSON(http.StatusBadRequest, &responses.DefaultResponse{
+			return c.JSON(http.StatusBadRequest, responses.DefaultResponse{
 				Status:  http.StatusBadRequest,
 				Success: false,
 				Message: "Invalid credentials",
@@ -92,15 +94,27 @@ func Login(db *repository.Sqlite) func(c *echo.Context) error {
 		err = bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(user.Password))
 		if err != nil {
 			c.Logger().Error("Invalid credentials")
-			return c.JSON(http.StatusBadRequest, &responses.DefaultResponse{
+			return c.JSON(http.StatusBadRequest, responses.DefaultResponse{
 				Status:  http.StatusBadRequest,
 				Success: false,
 				Message: "Invalid credentials",
 			})
 		}
 		// generate jwt token
+		claims := services.NewCustomClaims(*u.Id, u.Email, time.Now().Add(time.Minute*15))
+		token, err := claims.GenerateToken()
 
-		return c.String(200, "Hello World")
+		if err != nil {
+			c.Logger().Error("Failed to generated jwt token")
+			return err
+		}
+		return c.JSON(http.StatusOK, &responses.DefaultResponse{
+			Status:  http.StatusOK,
+			Success: true,
+			Message: map[string]string{
+				"token": token,
+			},
+		})
 
 	}
 }

@@ -13,21 +13,23 @@ type AuthService interface {
 }
 
 type CustomJWTClaims struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
+	UserId   string `json:"id"`
+	UserName string `json:"name"`
 	jwt.RegisteredClaims
 }
 
-func (auth *CustomJWTClaims) GenerateToken(userId string, userName string) (string, error) {
-	claims := &CustomJWTClaims{
-		Id:   userId,
-		Name: userName,
+func NewCustomClaims(userId string, userName string,exp time.Time) *CustomJWTClaims {
+	return &CustomJWTClaims{
+		UserId: userId,
+		UserName: userName,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * 15)),
+			ExpiresAt: jwt.NewNumericDate(exp),
 		},
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+}
 
+func (claims *CustomJWTClaims) GenerateToken() (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	encoded_token, err := token.SignedString(config.GetEnv("JWT_SECRET", "JON_SNOW"))
 
 	if err != nil {
