@@ -75,7 +75,7 @@ func Signup(userModel types.UserOps) func(c *echo.Context) error {
 
 func Login(userModel types.UserOps) func(c *echo.Context) error {
 	return func(c *echo.Context) error {
-		var user types.UserLogin
+		var user models.User
 		err := echo.BindBody(c, &user)
 		if err != nil {
 			c.Logger().Error("No body found in request")

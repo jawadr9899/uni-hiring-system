@@ -8,7 +8,7 @@ type User struct {
 	Name      string    `json:"name"`
 	Email     string    `json:"email"`
 	Password  string    `json:"password"`
-	Analytics Analytics `gorm:"constraint:onUpdate:CASCADE,onDelete:CASCADE;" json:"-"`
+	Analytics Analytics `gorm:"foreignKey:UserId;references:Id;constraint:onUpdate:CASCADE,onDelete:CASCADE;" json:"-"`
 }
 
 type Analytics struct {

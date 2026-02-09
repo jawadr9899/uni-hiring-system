@@ -5,7 +5,6 @@ import (
 	"uhs/internal/config"
 	"uhs/internal/routes"
 	"uhs/internal/services"
-
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
@@ -22,7 +21,7 @@ func main() {
 	app.Use(middleware.Recover())
 
 	// Groups
-	api := app.Group("/api")
+	api := app.Group("/api/user")
 	// DB Connection
 	db, err := services.SetupDB(app, cfg)
 	if err != nil {

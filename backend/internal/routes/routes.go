@@ -14,10 +14,14 @@ import (
 func SetupRoutes(cfg *config.Config, api *echo.Group, db *gorm.DB) {
 	// services
 	userServiceOps := services.NewDatabaseService[models.User](db)
+	analyticsServiceOps := services.NewDatabaseService[models.Analytics](db)
+	pdfServiceOps := services.NewPDFService("cv.pdf")
 
 	// routes
-	api.GET("/user/all", handlers.GetUsers(userServiceOps), middleware.Authenticate(cfg))
-	api.POST("/user/signup", handlers.Signup(userServiceOps))
-	api.POST("/user/login", handlers.Login(userServiceOps))
+	api.GET("/all", handlers.GetUsers(userServiceOps), middleware.Authenticate(cfg))
+	api.POST("/signup", handlers.Signup(userServiceOps))
+	api.POST("/login", handlers.Login(userServiceOps))
+	// protected routes
+	api.POST("/analytics", handlers.SaveAnalytics(analyticsServiceOps,pdfServiceOps), middleware.Authenticate(cfg))
 
 }
