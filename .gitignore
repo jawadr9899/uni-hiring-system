@@ -30,7 +30,7 @@ backend/.air.toml
 backend/tmp
 backend/uploads/*
 backend/requirements.proj
-database/*.db
+database/*
 
 # Editor/IDE
 # .idea/
