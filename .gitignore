@@ -28,7 +28,9 @@ go.work.sum
 backend/.env
 backend/.air.toml
 backend/tmp
-backend/*.db
+backend/uploads/*
+backend/*.proj
+database/*
 
 # Editor/IDE
 # .idea/
