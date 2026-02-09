@@ -29,7 +29,6 @@ backend/.env
 backend/.air.toml
 backend/tmp
 backend/uploads/*
-backend/requirements.proj
 database/*
 
 # Editor/IDE
