@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	if err := godotenv.Load(".env"); err != nil {
+	if err := godotenv.Load(".env.dev"); err != nil {
 		log.Fatalf("Failed to load env file with error\n%s", err)
 	}
 	cfg := config.LoadConfig()
