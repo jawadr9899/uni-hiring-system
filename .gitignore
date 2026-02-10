@@ -32,6 +32,11 @@ backend/uploads/*
 database/*
 tmp
 
+# frontend related
+frontend/bun.lock
+frontend/node_modules
+
+
 # Editor/IDE
 # .idea/
 # .vscode/
