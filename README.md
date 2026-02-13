@@ -1,4 +1,0 @@
-## University Hiring System
-
-> [!NOTE]
-> Presently in development...
